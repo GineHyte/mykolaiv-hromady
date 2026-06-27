@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Моніторинг міжнародних зв'язків громад · Миколаївська область</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue: #1a56a0;
+    --blue-light: #e8f0fb;
+    --blue-mid: #3578c7;
+    --green: #1a7a4a;
+    --green-light: #e6f5ed;
+    --amber: #b45309;
+    --amber-light: #fef3c7;
+    --gray: #6b7280;
+    --gray-light: #f3f4f6;
+    --red: #b91c1c;
+    --red-light: #fee2e2;
+    --surface: #ffffff;
+    --surface-2: #f8fafc;
+    --border: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --text: #1e293b;
+    --text-2: #475569;
+    --text-3: #94a3b8;
+    --radius: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.05);
+  }
+
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-size: 14px; color: var(--text); background: var(--surface-2); min-height: 100vh; }
+
+  /* HEADER */
+  .header { background: var(--blue); color: #fff; padding: 0 20px; display: flex; align-items: center; gap: 16px; height: 56px; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+  .header-logo { font-size: 20px; opacity: .9; }
+  .header h1 { font-size: 15px; font-weight: 600; flex: 1; letter-spacing: .01em; }
+  .header-sub { font-size: 12px; opacity: .75; white-space: nowrap; }
+  .header-badges { display: flex; gap: 8px; }
+  .hbadge { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25); border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+
+  /* LAYOUT */
+  .app { display: flex; height: calc(100vh - 56px); overflow: hidden; }
+  .map-area { flex: 1; position: relative; }
+  #map { width: 100%; height: 100%; }
+
+  /* SIDEBAR */
+  .sidebar { width: 360px; background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+  .sidebar-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .stab { flex: 1; padding: 12px 4px; font-size: 12px; font-weight: 600; color: var(--text-3); border: none; background: transparent; cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; display: flex; align-items: center; justify-content: center; gap: 5px; }
+  .stab.active { color: var(--blue); border-bottom-color: var(--blue); }
+  .stab:hover:not(.active) { background: var(--gray-light); color: var(--text-2); }
+  .panel { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+  .panel.active { display: flex; }
+  .panel-body { flex: 1; overflow-y: auto; padding: 14px; }
+  .panel-body::-webkit-scrollbar { width: 4px; }
+  .panel-body::-webkit-scrollbar-track { background: transparent; }
+  .panel-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .stat-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; }
+  .stat-card .num { font-size: 24px; font-weight: 700; color: var(--text); }
+  .stat-card .lbl { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+  .stat-card.blue .num { color: var(--blue); }
+  .stat-card.green .num { color: var(--green); }
+
+  /* FILTER BAR */
+  .filter-bar { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .filter-bar input { flex: 1; min-width: 120px; padding: 7px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius); font-size: 13px; color: var(--text); background: var(--surface); }
+  .filter-bar input:focus { outline: none; border-color: var(--blue-mid); box-shadow: 0 0 0 3px rgba(53,120,199,.15); }
+  .filter-bar select { padding: 7px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius); font-size: 12px; color: var(--text-2); background: var(--surface); cursor: pointer; }
+  .filter-bar select:focus { outline: none; border-color: var(--blue-mid); }
+
+  /* HROMADA CARDS */
+  .hcard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 11px 13px; margin-bottom: 7px; cursor: pointer; transition: all .15s; }
+  .hcard:hover { border-color: var(--blue-mid); box-shadow: var(--shadow); }
+  .hcard.selected { border-color: var(--blue); background: var(--blue-light); }
+  .hcard-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .hcard-meta { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+  .hcard-badges { display: flex; gap: 4px; margin-top: 7px; flex-wrap: wrap; }
+
+  /* BADGES */
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+  .badge-green { background: var(--green-light); color: var(--green); }
+  .badge-blue { background: var(--blue-light); color: var(--blue); }
+  .badge-amber { background: var(--amber-light); color: var(--amber); }
+  .badge-gray { background: var(--gray-light); color: var(--gray); }
+  .badge-red { background: var(--red-light); color: var(--red); }
+
+  /* FORM */
+  .form-section { margin-bottom: 6px; }
+  .form-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); padding: 10px 0 6px; border-top: 1px solid var(--border); margin-top: 10px; display: flex; align-items: center; justify-content: space-between; }
+  .fgroup { margin-bottom: 10px; }
+  .fgroup label { display: block; font-size: 12px; font-weight: 600; color: var(--text-2); margin-bottom: 4px; }
+  .fgroup input, .fgroup select, .fgroup textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius); font-size: 13px; color: var(--text); background: var(--surface); font-family: inherit; transition: border .15s; }
+  .fgroup input:focus, .fgroup select:focus, .fgroup textarea:focus { outline: none; border-color: var(--blue-mid); box-shadow: 0 0 0 3px rgba(53,120,199,.15); }
+  .fgroup textarea { min-height: 56px; resize: vertical; }
+  .fgrid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  /* PARTNER ENTRY */
+  .pentry { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 8px; }
+  .pentry-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 12px; font-weight: 600; color: var(--text-2); }
+
+  /* BUTTONS */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius); font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); transition: all .15s; font-family: inherit; }
+  .btn:hover { background: var(--gray-light); border-color: var(--border-strong); }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .btn-primary:hover { background: #1447a0; border-color: #1447a0; }
+  .btn-green { background: var(--green); color: #fff; border-color: var(--green); }
+  .btn-green:hover { background: #145f39; }
+  .btn-danger { border-color: #fca5a5; color: var(--red); background: transparent; }
+  .btn-danger:hover { background: var(--red-light); }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+  .btn-xs { padding: 2px 7px; font-size: 10px; }
+  .btn-outline { background: transparent; }
+  .btn-block { width: 100%; justify-content: center; }
+  .btn-row { display: flex; gap: 8px; margin-top: 16px; }
+
+  /* DETAIL PANEL */
+  .detail-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+  .detail-name { font-size: 16px; font-weight: 700; color: var(--text); }
+  .detail-sub { font-size: 12px; color: var(--text-3); margin-top: 3px; }
+  .detail-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .info-list { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 14px; }
+  .info-row { display: flex; align-items: flex-start; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .info-row:last-child { border-bottom: none; }
+  .info-key { color: var(--text-3); width: 110px; flex-shrink: 0; font-size: 12px; padding-top: 1px; }
+  .info-val { color: var(--text); font-weight: 500; flex: 1; }
+  .section-head { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); margin: 14px 0 8px; }
+  .partner-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 8px; }
+  .partner-card.type-partner { border-left: 3px solid var(--green); }
+  .partner-card.type-memo { border-left: 3px solid var(--blue-mid); }
+  .pc-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .pc-sub { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+  .pc-tags { margin-top: 6px; display: flex; gap: 4px; flex-wrap: wrap; }
+  .empty-state { text-align: center; padding: 32px 16px; color: var(--text-3); }
+  .empty-state i { font-size: 32px; display: block; margin-bottom: 8px; }
+  .empty-state p { font-size: 13px; }
+
+  /* LEGEND */
+  .map-legend { position: absolute; bottom: 24px; left: 12px; background: rgba(255,255,255,.95); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; z-index: 1000; box-shadow: var(--shadow-md); min-width: 160px; }
+  .map-legend h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); margin-bottom: 8px; }
+  .leg-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-2); margin-bottom: 5px; }
+  .leg-item:last-child { margin-bottom: 0; }
+  .leg-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; border: 2px solid rgba(0,0,0,.1); }
+
+  /* MAP CONTROLS */
+  .map-controls { position: absolute; top: 12px; left: 12px; z-index: 1000; display: flex; flex-direction: column; gap: 6px; }
+  .map-filter-pill { background: rgba(255,255,255,.95); border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-2); transition: all .15s; white-space: nowrap; box-shadow: var(--shadow); }
+  .map-filter-pill.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+  /* TOAST */
+  .toast-wrap { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 9999; pointer-events: none; }
+  .toast { background: var(--green); color: #fff; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; box-shadow: var(--shadow-md); opacity: 0; transition: opacity .3s; white-space: nowrap; }
+  .toast.error { background: var(--red); }
+  .toast.show { opacity: 1; }
+
+  /* EXPORT ROW */
+  .export-row { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--border); flex-shrink: 0; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+
+  /* MODAL */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 2000; display: flex; align-items: center; justify-content: center; display: none; }
+  .modal-bg.show { display: flex; }
+  .modal { background: var(--surface); border-radius: 12px; padding: 24px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+  .modal h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .app { flex-direction: column; height: auto; }
+    .map-area { height: 40vh; }
+    .sidebar { width: 100%; height: auto; max-height: 60vh; }
+    .header h1 { font-size: 13px; }
+    .header-sub, .hbadge:not(:first-child) { display: none; }
+  }
+
+  .required { color: var(--red); }
+  a { color: var(--blue-mid); }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <i class="fa-solid fa-earth-europe header-logo" aria-hidden="true"></i>
+  <h1>Моніторинг міжнародних зв'язків громад · Миколаївська область</h1>
+  <span class="header-sub" id="hdr-updated"></span>
+  <div class="header-badges">
+    <span class="hbadge" id="hbadge-total">0 громад</span>
+    <span class="hbadge" id="hbadge-linked">0 мають зв'язки</span>
+  </div>
+</header>
+
+<div class="app">
+  <div class="map-area">
+    <div id="map"></div>
+    <div class="map-controls">
+      <button class="map-filter-pill active" onclick="setMapFilter('all',this)">Всі</button>
+      <button class="map-filter-pill" onclick="setMapFilter('partner',this)">Є побратими</button>
+      <button class="map-filter-pill" onclick="setMapFilter('memo',this)">Є меморандуми</button>
+      <button class="map-filter-pill" onclick="setMapFilter('none',this)">Без зв'язків</button>
+    </div>
+    <div class="map-legend">
+      <h4>Легенда</h4>
+      <div class="leg-item"><div class="leg-dot" style="background:#1a7a4a"></div>Є міста-побратими</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#1a56a0"></div>Лише меморандуми</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#94a3b8"></div>Немає зв'язків</div>
+    </div>
+    <div class="toast-wrap"><div class="toast" id="toast"></div></div>
+  </div>
+
+  <div class="sidebar">
+    <div class="sidebar-tabs">
+      <button class="stab active" id="stab-list" onclick="switchTab('list')"><i class="fa-solid fa-list-ul"></i> Список</button>
+      <button class="stab" id="stab-add" onclick="switchTab('add')"><i class="fa-solid fa-plus"></i> <span id="stab-add-label">Додати</span></button>
+      <button class="stab" id="stab-detail" onclick="switchTab('detail')" style="display:none"><i class="fa-solid fa-circle-info"></i> Картка</button>
+    </div>
+
+    <!-- LIST PANEL -->
+    <div class="panel active" id="panel-list">
+      <div class="panel-body">
+        <div class="stats-grid">
+          <div class="stat-card blue"><div class="num" id="s-total">0</div><div class="lbl">Всього громад</div></div>
+          <div class="stat-card green"><div class="num" id="s-linked">0</div><div class="lbl">Мають партнерів</div></div>
+          <div class="stat-card"><div class="num" id="s-partners">0</div><div class="lbl">Міст-побратимів</div></div>
+          <div class="stat-card"><div class="num" id="s-memos">0</div><div class="lbl">Меморандумів</div></div>
+        </div>
+        <div class="filter-bar">
+          <input id="search" placeholder="&#xf002;  Пошук..." oninput="renderList()">
+          <select id="filter-district" onchange="renderList()">
+            <option value="">Всі райони</option>
+            <option>Миколаївський</option>
+            <option>Вознесенський</option>
+            <option>Баштанський</option>
+            <option>Первомайський</option>
+          </select>
+          <select id="filter-status" onchange="renderList()">
+            <option value="">Будь-який статус</option>
+            <option value="partner">Є побратими</option>
+            <option value="memo">Є меморандуми</option>
+            <option value="none">Без зв'язків</option>
+          </select>
+        </div>
+        <div id="hromada-list"></div>
+      </div>
+      <div class="export-row">
+        <button class="btn btn-sm" onclick="exportCSV()"><i class="fa-solid fa-download"></i> CSV</button>
+        <button class="btn btn-sm" onclick="exportJSON()"><i class="fa-solid fa-code"></i> JSON</button>
+        <button class="btn btn-sm btn-green" onclick="switchTab('add');editingId=null;clearForm();document.getElementById('stab-add-label').textContent='Додати'"><i class="fa-solid fa-plus"></i> Нова громада</button>
+      </div>
+    </div>
+
+    <!-- ADD/EDIT PANEL -->
+    <div class="panel" id="panel-add">
+      <div class="panel-body">
+        <div class="fgroup">
+          <label>Назва громади <span class="required">*</span></label>
+          <input id="f-name" placeholder="Наприклад: Миколаївська міська">
+        </div>
+        <div class="fgrid2">
+          <div class="fgroup">
+            <label>Тип</label>
+            <select id="f-type">
+              <option>Міська</option>
+              <option>Селищна</option>
+              <option>Сільська</option>
+            </select>
+          </div>
+          <div class="fgroup">
+            <label>Район</label>
+            <select id="f-district">
+              <option>Миколаївський</option>
+              <option>Вознесенський</option>
+              <option>Баштанський</option>
+              <option>Первомайський</option>
+            </select>
+          </div>
+        </div>
+        <div class="fgroup">
+          <label>Голова громади</label>
+          <input id="f-head" placeholder="Прізвище Ім'я По-батькові">
+        </div>
+        <div class="fgrid2">
+          <div class="fgroup">
+            <label>Email</label>
+            <input id="f-email" type="email" placeholder="rada@gromada.gov.ua">
+          </div>
+          <div class="fgroup">
+            <label>Телефон</label>
+            <input id="f-phone" placeholder="+380 512 000000">
+          </div>
+        </div>
+        <div class="fgroup">
+          <label>Вебсайт</label>
+          <input id="f-site" placeholder="https://gromada.gov.ua">
+        </div>
+        <div class="fgroup">
+          <label>Координати на карті (lat, lng)</label>
+          <input id="f-coords" placeholder="47.1234, 31.9876" title="Широта і довгота через кому">
+        </div>
+
+        <div class="form-section-title">
+          <span><i class="fa-solid fa-flag" style="margin-right:5px;color:var(--green)"></i>Міста-побратими</span>
+          <button class="btn btn-sm btn-green" onclick="addPartnerField()"><i class="fa-solid fa-plus"></i> Додати</button>
+        </div>
+        <div id="partners-form"></div>
+
+        <div class="form-section-title">
+          <span><i class="fa-solid fa-file-signature" style="margin-right:5px;color:var(--blue)"></i>Меморандуми / угоди</span>
+          <button class="btn btn-sm btn-primary btn-outline" onclick="addMemoField()"><i class="fa-solid fa-plus"></i> Додати</button>
+        </div>
+        <div id="memos-form"></div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" style="flex:1" onclick="saveHromada()"><i class="fa-solid fa-floppy-disk"></i> Зберегти</button>
+          <button class="btn" onclick="clearForm()"><i class="fa-solid fa-rotate-left"></i> Очистити</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DETAIL PANEL -->
+    <div class="panel" id="panel-detail">
+      <div class="panel-body" id="detail-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-bg" id="confirm-modal">
+  <div class="modal">
+    <h2 id="modal-title">Підтвердження</h2>
+    <p id="modal-body" style="color:var(--text-2);font-size:13px;line-height:1.5"></p>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Скасувати</button>
+      <button class="btn btn-danger" id="modal-confirm-btn">Видалити</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────
+const COORDS = {
+  "Миколаївська міська":[46.9750,31.9946],
+  "Вознесенська міська":[47.5590,31.3120],
+  "Первомайська міська":[47.9800,30.8570],
+  "Баштанська міська":[47.4060,32.4390],
+  "Южноукраїнська міська":[47.8200,31.1660],
+  "Снігурівська міська":[47.0680,32.8010],
+  "Березнегуватська селищна":[47.3060,32.9680],
+  "Братська селищна":[47.9460,31.5810],
+  "Веселинівська селищна":[47.3590,31.2330],
+  "Єланецька селищна":[47.6800,31.5920],
+  "Казанківська селищна":[47.8420,32.1370],
+  "Кривоозерська міська":[47.9610,30.3540],
+  "Новобузька міська":[47.6950,31.9800],
+  "Новоодеська міська":[47.3060,31.7820],
+  "Очаківська міська":[46.6170,31.5420],
+  "Арбузинська селищна":[47.8940,30.4990],
+  "Доманівська селищна":[47.5830,31.8910],
+  "Жовтневська міська":[46.8350,32.1760],
+  "Березанська селищна":[47.1820,32.5210],
+  "Врадіївська селищна":[47.8500,30.6300],
+  "Криворізька сільська":[47.5200,32.6500],
+  "Лупарівська сільська":[47.2800,32.1200],
+};
+
+const SEED = [
+  {id:1,name:"Миколаївська міська",type:"Міська",district:"Миколаївський",head:"Сєнкевич Олександр Федорович",email:"meria@mkrada.gov.ua",phone:"+380 512 370001",site:"https://mkrada.gov.ua",coords:[46.9750,31.9946],
+   partners:[
+     {city:"Рарітан",country:"США",year:2015,scope:"Культура, освіта, молодь",contact:"Офіс мера Раритан"},
+     {city:"Ополе",country:"Польща",year:1995,scope:"Торгівля, культура, спорт",contact:"Канцелярія міста Ополе"},
+     {city:"Гданськ",country:"Польща",year:2022,scope:"Відбудова, економіка",contact:"Бюро міжнародного співробітництва"}
+   ],
+   memos:[
+     {org:"Конгрес місцевих і регіональних влад Ради Європи",type:"Технічна допомога, демократія",year:2022,valid:"2025",contact:"secretariat@coe.int"},
+     {org:"Польсько-Українська торгова палата",type:"Економічна співпраця",year:2021,valid:"2026",contact:"info@puic.pl"}
+   ]},
+  {id:2,name:"Вознесенська міська",type:"Міська",district:"Вознесенський",head:"Зубко Яків Миколайович",email:"voznradа@ukr.net",phone:"+380 512 552000",site:"",coords:[47.5590,31.3120],
+   partners:[{city:"Хмєльно",country:"Польща",year:2018,scope:"Освіта, культура",contact:""}],
+   memos:[]},
+  {id:3,name:"Первомайська міська",type:"Міська",district:"Первомайський",head:"Столяр Олег Олексійович",email:"",phone:"",site:"",coords:[47.9800,30.8570],
+   partners:[],
+   memos:[{org:"USAID Україна",type:"Розвиток громади, водопостачання",year:2023,valid:"2026",contact:"ukraine@usaid.gov"}]},
+  {id:4,name:"Баштанська міська",type:"Міська",district:"Баштанський",head:"",email:"",phone:"",site:"",coords:[47.4060,32.4390],partners:[],memos:[]},
+  {id:5,name:"Очаківська міська",type:"Міська",district:"Миколаївський",head:"",email:"",phone:"",site:"",coords:[46.6170,31.5420],partners:[],memos:[]},
+  {id:6,name:"Южноукраїнська міська",type:"Міська",district:"Миколаївський",head:"",email:"",phone:"",site:"",coords:[47.8200,31.1660],
+   partners:[{city:"Шпайєр",country:"Німеччина",year:2014,scope:"Освіта, культура",contact:""}],memos:[]},
+  {id:7,name:"Снігурівська міська",type:"Міська",district:"Баштанський",head:"",email:"",phone:"",site:"",coords:[47.0680,32.8010],partners:[],
+   memos:[{org:"GIZ (Deutsche Gesellschaft für Internationale Zusammenarbeit)",type:"Децентралізація",year:2022,valid:"2024",contact:"giz-ukraine@giz.de"}]},
+  {id:8,name:"Кривоозерська міська",type:"Міська",district:"Первомайський",head:"",email:"",phone:"",site:"",coords:[47.9610,30.3540],partners:[],memos:[]},
+  {id:9,name:"Новобузька міська",type:"Міська",district:"Баштанський",head:"",email:"",phone:"",site:"",coords:[47.6950,31.9800],partners:[],memos:[]},
+  {id:10,name:"Братська селищна",type:"Селищна",district:"Вознесенський",head:"",email:"",phone:"",site:"",coords:[47.9460,31.5810],partners:[],memos:[]},
+];
+
+// ─── STATE ───────────────────────────────────────────────────────────
+let DB = loadDB();
+let nextId = Math.max(...DB.map(h=>h.id), 10) + 1;
+let editingId = null;
+let selectedId = null;
+let pCount = 0, mCount = 0;
+let mapFilter = 'all';
+let map, markers = {};
+
+function loadDB(){
+  try {
+    const s = localStorage.getItem('hromady_db');
+    if(s) return JSON.parse(s);
+  } catch(e){}
+  return JSON.parse(JSON.stringify(SEED));
+}
+function saveDB(){
+  try { localStorage.setItem('hromady_db', JSON.stringify(DB)); } catch(e){}
+}
+
+// ─── MAP ─────────────────────────────────────────────────────────────
+function initMap(){
+  map = L.map('map', {center:[47.2,31.9], zoom:8, zoomControl:true});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a>',maxZoom:19
+  }).addTo(map);
+  renderMarkers();
+}
+
+function markerColor(h){
+  if(h.partners.length>0) return '#1a7a4a';
+  if(h.memos.length>0) return '#1a56a0';
+  return '#94a3b8';
+}
+
+function makeIcon(color, selected){
+  const size = selected ? 18 : 14;
+  const border = selected ? '3px solid #fff' : '2px solid rgba(255,255,255,.9)';
+  const shadow = selected ? '0 0 0 3px '+color+', 0 2px 8px rgba(0,0,0,.4)' : '0 1px 4px rgba(0,0,0,.25)';
+  return L.divIcon({
+    html:`<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:${border};box-shadow:${shadow};transition:all .2s"></div>`,
+    className:'', iconSize:[size,size], iconAnchor:[size/2,size/2]
+  });
+}
+
+function renderMarkers(){
+  Object.entries(markers).forEach(([,m])=>map.removeLayer(m));
+  markers = {};
+  DB.forEach(h=>{
+    if(mapFilter !== 'all'){
+      if(mapFilter==='partner' && h.partners.length===0) return;
+      if(mapFilter==='memo' && (h.memos.length===0 || h.partners.length>0)) return;
+      if(mapFilter==='none' && (h.partners.length>0||h.memos.length>0)) return;
+    }
+    const coords = h.coords || COORDS[h.name] || [47.0+Math.random()*.6, 31.5+Math.random()*.9];
+    const m = L.marker(coords, {icon:makeIcon(markerColor(h), h.id===selectedId)}).addTo(map);
+    m.bindTooltip(`
+      <div style="font-size:13px;font-weight:700;margin-bottom:3px">${h.name}</div>
+      <div style="font-size:11px;color:#555">${h.type} · ${h.district} р-н</div>
+      <div style="font-size:11px;margin-top:4px">
+        ${h.partners.length ? `<span style="color:#1a7a4a">&#9632; ${h.partners.length} побратим${h.partners.length>1?'и':''}</span>  ` : ''}
+        ${h.memos.length ? `<span style="color:#1a56a0">&#9632; ${h.memos.length} меморандум${h.memos.length>1?'и':''}</span>` : ''}
+        ${!h.partners.length&&!h.memos.length ? '<span style="color:#94a3b8">Немає зв\'язків</span>' : ''}
+      </div>`,
+      {direction:'top', offset:[0,-8], className:''}
+    );
+    m.on('click',()=>showDetail(h.id));
+    markers[h.id] = m;
+  });
+}
+
+function setMapFilter(f, btn){
+  mapFilter = f;
+  document.querySelectorAll('.map-filter-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMarkers();
+}
+
+// ─── STATS & LIST ────────────────────────────────────────────────────
+function updateStats(){
+  const linked = DB.filter(h=>h.partners.length>0||h.memos.length>0).length;
+  const tp = DB.reduce((s,h)=>s+h.partners.length,0);
+  const tm = DB.reduce((s,h)=>s+h.memos.length,0);
+  document.getElementById('s-total').textContent = DB.length;
+  document.getElementById('s-linked').textContent = linked;
+  document.getElementById('s-partners').textContent = tp;
+  document.getElementById('s-memos').textContent = tm;
+  document.getElementById('hbadge-total').textContent = DB.length+' громад';
+  document.getElementById('hbadge-linked').textContent = linked+' мають зв\'язки';
+  document.getElementById('hdr-updated').textContent = 'Оновлено: '+new Date().toLocaleDateString('uk-UA');
+}
+
+function renderList(){
+  const q = document.getElementById('search').value.toLowerCase();
+  const dist = document.getElementById('filter-district').value;
+  const status = document.getElementById('filter-status').value;
+  let list = DB.filter(h=>{
+    if(q && !h.name.toLowerCase().includes(q)) return false;
+    if(dist && h.district!==dist) return false;
+    if(status==='partner' && h.partners.length===0) return false;
+    if(status==='memo' && h.memos.length===0) return false;
+    if(status==='none' && (h.partners.length>0||h.memos.length>0)) return false;
+    return true;
+  });
+  const el = document.getElementById('hromada-list');
+  if(!list.length){
+    el.innerHTML='<div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i><p>Нічого не знайдено.<br>Змініть фільтри або <a href="#" onclick="clearFilters()">скиньте пошук</a>.</p></div>';
+    return;
+  }
+  el.innerHTML = list.map(h=>`
+    <div class="hcard${selectedId===h.id?' selected':''}" onclick="showDetail(${h.id})">
+      <div class="hcard-name">${h.name}</div>
+      <div class="hcard-meta">${h.type} · ${h.district} район${h.head?' · '+h.head.split(' ')[0]+' '+h.head.split(' ')[1]:''}</div>
+      <div class="hcard-badges">
+        ${h.partners.length?`<span class="badge badge-green"><i class="fa-solid fa-handshake"></i> ${h.partners.length} побратим${h.partners.length>1?'и':''}</span>`:''}
+        ${h.memos.length?`<span class="badge badge-blue"><i class="fa-solid fa-file-signature"></i> ${h.memos.length} меморандум${h.memos.length>1?'и':''}</span>`:''}
+        ${!h.partners.length&&!h.memos.length?`<span class="badge badge-gray"><i class="fa-solid fa-minus"></i> Немає зв'язків</span>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function clearFilters(){
+  document.getElementById('search').value='';
+  document.getElementById('filter-district').value='';
+  document.getElementById('filter-status').value='';
+  renderList();
+}
+
+// ─── DETAIL ──────────────────────────────────────────────────────────
+function showDetail(id){
+  selectedId = id;
+  const h = DB.find(x=>x.id===id);
+  if(!h) return;
+  document.getElementById('stab-detail').style.display='';
+  switchTab('detail');
+
+  const el = document.getElementById('detail-content');
+  el.innerHTML = `
+    <div class="detail-header">
+      <div>
+        <div class="detail-name">${h.name}</div>
+        <div class="detail-sub">${h.type} громада · ${h.district} район</div>
+      </div>
+      <div class="detail-actions">
+        <button class="btn btn-sm" title="Редагувати" onclick="editHromada(${h.id})"><i class="fa-solid fa-pen"></i></button>
+        <button class="btn btn-sm btn-danger" title="Видалити" onclick="confirmDelete(${h.id})"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>
+
+    <div class="info-list">
+      ${h.head?`<div class="info-row"><span class="info-key"><i class="fa-solid fa-user" style="width:14px"></i> Голова</span><span class="info-val">${h.head}</span></div>`:''}
+      ${h.email?`<div class="info-row"><span class="info-key"><i class="fa-solid fa-envelope" style="width:14px"></i> Email</span><span class="info-val"><a href="mailto:${h.email}">${h.email}</a></span></div>`:''}
+      ${h.phone?`<div class="info-row"><span class="info-key"><i class="fa-solid fa-phone" style="width:14px"></i> Телефон</span><span class="info-val">${h.phone}</span></div>`:''}
+      ${h.site?`<div class="info-row"><span class="info-key"><i class="fa-solid fa-globe" style="width:14px"></i> Сайт</span><span class="info-val"><a href="${h.site}" target="_blank">${h.site}</a></span></div>`:''}
+    </div>
+
+    <div class="section-head"><i class="fa-solid fa-flag" style="color:var(--green);margin-right:6px"></i>Міста-побратими (${h.partners.length})</div>
+    ${h.partners.length ? h.partners.map(p=>`
+      <div class="partner-card type-partner">
+        <div class="pc-name"><i class="fa-solid fa-city" style="color:var(--green);margin-right:5px"></i>${p.city}, ${p.country}</div>
+        <div class="pc-sub">Угода з ${p.year} року</div>
+        <div class="pc-tags">
+          ${p.scope?`<span class="badge badge-green">${p.scope}</span>`:''}
+          ${p.contact?`<span class="badge badge-gray"><i class="fa-solid fa-address-book"></i> ${p.contact}</span>`:''}
+        </div>
+      </div>`).join('') : `<div class="empty-state" style="padding:16px"><i class="fa-regular fa-circle-xmark" style="font-size:22px"></i><p>Немає міст-побратимів</p></div>`}
+
+    <div class="section-head" style="margin-top:14px"><i class="fa-solid fa-file-signature" style="color:var(--blue-mid);margin-right:6px"></i>Меморандуми (${h.memos.length})</div>
+    ${h.memos.length ? h.memos.map(m=>`
+      <div class="partner-card type-memo">
+        <div class="pc-name"><i class="fa-solid fa-building-columns" style="color:var(--blue-mid);margin-right:5px"></i>${m.org}</div>
+        <div class="pc-sub">Підписано ${m.year} · дія до ${m.valid}</div>
+        <div class="pc-tags">
+          ${m.type?`<span class="badge badge-blue">${m.type}</span>`:''}
+          ${m.contact?`<span class="badge badge-gray"><i class="fa-solid fa-envelope"></i> ${m.contact}</span>`:''}
+        </div>
+      </div>`).join('') : `<div class="empty-state" style="padding:16px"><i class="fa-regular fa-circle-xmark" style="font-size:22px"></i><p>Немає меморандумів</p></div>`}
+
+    <div style="margin-top:18px;display:flex;gap:8px">
+      <button class="btn btn-green btn-block" onclick="editHromada(${h.id})"><i class="fa-solid fa-pen-to-square"></i> Редагувати дані громади</button>
+    </div>`;
+
+  const coords = h.coords || COORDS[h.name];
+  if(coords && map){
+    map.setView(coords, 11, {animate:true});
+    if(markers[id]) markers[id].openTooltip();
+  }
+  renderMarkers();
+  renderList();
+}
+
+// ─── FORM ────────────────────────────────────────────────────────────
+function addPartnerField(data){
+  pCount++;
+  const n = pCount;
+  const div = document.createElement('div');
+  div.className = 'pentry';
+  div.id = 'pe-'+n;
+  div.innerHTML = `
+    <div class="pentry-head">
+      <span><i class="fa-solid fa-flag" style="color:var(--green);margin-right:5px"></i>Місто-побратим</span>
+      <button class="btn btn-xs btn-danger" onclick="document.getElementById('pe-${n}').remove()"><i class="fa-solid fa-xmark"></i> Видалити</button>
+    </div>
+    <div class="fgrid2">
+      <div class="fgroup"><label>Назва міста</label><input id="pe-city-${n}" placeholder="Варшава" value="${data?data.city:''}"></div>
+      <div class="fgroup"><label>Країна</label><input id="pe-country-${n}" placeholder="Польща" value="${data?data.country:''}"></div>
+    </div>
+    <div class="fgrid2">
+      <div class="fgroup"><label>Рік угоди</label><input id="pe-year-${n}" placeholder="2020" value="${data?data.year:''}"></div>
+      <div class="fgroup"><label>Напрям співпраці</label><input id="pe-scope-${n}" placeholder="Освіта, культура" value="${data?data.scope:''}"></div>
+    </div>
+    <div class="fgroup"><label>Контактна особа / організація</label><input id="pe-contact-${n}" placeholder="Ім'я або назва відділу" value="${data?data.contact:''}"></div>`;
+  document.getElementById('partners-form').appendChild(div);
+}
+
+function addMemoField(data){
+  mCount++;
+  const n = mCount;
+  const div = document.createElement('div');
+  div.className = 'pentry';
+  div.id = 'me-'+n;
+  div.innerHTML = `
+    <div class="pentry-head">
+      <span><i class="fa-solid fa-file-signature" style="color:var(--blue-mid);margin-right:5px"></i>Меморандум</span>
+      <button class="btn btn-xs btn-danger" onclick="document.getElementById('me-${n}').remove()"><i class="fa-solid fa-xmark"></i> Видалити</button>
+    </div>
+    <div class="fgroup"><label>Назва організації</label><input id="me-org-${n}" placeholder="Назва міжнародної організації або міста" value="${data?data.org:''}"></div>
+    <div class="fgroup"><label>Тип / предмет співпраці</label><input id="me-type-${n}" placeholder="Технічна допомога, відбудова, освіта" value="${data?data.type:''}"></div>
+    <div class="fgrid2">
+      <div class="fgroup"><label>Рік підписання</label><input id="me-year-${n}" placeholder="2023" value="${data?data.year:''}"></div>
+      <div class="fgroup"><label>Дія до (рік)</label><input id="me-valid-${n}" placeholder="2026" value="${data?data.valid:''}"></div>
+    </div>
+    <div class="fgroup"><label>Контакт / email організації</label><input id="me-contact-${n}" placeholder="contact@org.eu" value="${data?data.contact:''}"></div>`;
+  document.getElementById('memos-form').appendChild(div);
+}
+
+function collectPartners(){
+  return [...document.querySelectorAll('[id^="pe-city-"]')]
+    .map(el=>{ const n=el.id.replace('pe-city-','');
+      return {city:el.value.trim(),country:val('pe-country-'+n),year:val('pe-year-'+n),scope:val('pe-scope-'+n),contact:val('pe-contact-'+n)};})
+    .filter(p=>p.city);
+}
+function collectMemos(){
+  return [...document.querySelectorAll('[id^="me-org-"]')]
+    .map(el=>{ const n=el.id.replace('me-org-','');
+      return {org:el.value.trim(),type:val('me-type-'+n),year:val('me-year-'+n),valid:val('me-valid-'+n),contact:val('me-contact-'+n)};})
+    .filter(m=>m.org);
+}
+function val(id){ const el=document.getElementById(id); return el?el.value.trim():''; }
+
+function clearForm(){
+  ['f-name','f-head','f-email','f-phone','f-site','f-coords'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('f-type').value='Міська';
+  document.getElementById('f-district').value='Миколаївський';
+  document.getElementById('partners-form').innerHTML='';
+  document.getElementById('memos-form').innerHTML='';
+  pCount=0; mCount=0; editingId=null;
+  document.getElementById('stab-add-label').textContent='Додати';
+}
+
+function saveHromada(){
+  const name = document.getElementById('f-name').value.trim();
+  if(!name){ toast('Вкажіть назву громади','error'); return; }
+  const coordsStr = document.getElementById('f-coords').value.trim();
+  let coords = null;
+  if(coordsStr){
+    const parts = coordsStr.split(',').map(s=>parseFloat(s.trim()));
+    if(parts.length===2 && !isNaN(parts[0]) && !isNaN(parts[1])) coords=parts;
+  }
+  const h = {
+    id: editingId || nextId++,
+    name,
+    type: document.getElementById('f-type').value,
+    district: document.getElementById('f-district').value,
+    head: document.getElementById('f-head').value.trim(),
+    email: document.getElementById('f-email').value.trim(),
+    phone: document.getElementById('f-phone').value.trim(),
+    site: document.getElementById('f-site').value.trim(),
+    coords: coords || COORDS[name] || null,
+    partners: collectPartners(),
+    memos: collectMemos()
+  };
+  const idx = DB.findIndex(x=>x.id===h.id);
+  if(idx>=0) DB[idx]=h; else DB.push(h);
+  saveDB();
+  renderMarkers();
+  updateStats();
+  clearForm();
+  switchTab('list');
+  renderList();
+  toast(editingId?'Дані оновлено':'Громаду додано');
+  editingId=null;
+}
+
+function editHromada(id){
+  const h = DB.find(x=>x.id===id);
+  if(!h) return;
+  editingId = id;
+  switchTab('add');
+  document.getElementById('stab-add-label').textContent='Редагувати';
+  document.getElementById('f-name').value = h.name;
+  document.getElementById('f-type').value = h.type;
+  document.getElementById('f-district').value = h.district;
+  document.getElementById('f-head').value = h.head||'';
+  document.getElementById('f-email').value = h.email||'';
+  document.getElementById('f-phone').value = h.phone||'';
+  document.getElementById('f-site').value = h.site||'';
+  document.getElementById('f-coords').value = h.coords ? h.coords.join(', ') : '';
+  document.getElementById('partners-form').innerHTML='';
+  document.getElementById('memos-form').innerHTML='';
+  pCount=0; mCount=0;
+  (h.partners||[]).forEach(p=>addPartnerField(p));
+  (h.memos||[]).forEach(m=>addMemoField(m));
+}
+
+function confirmDelete(id){
+  const h = DB.find(x=>x.id===id);
+  if(!h) return;
+  document.getElementById('modal-title').textContent='Видалити громаду';
+  document.getElementById('modal-body').textContent=`Ви впевнені, що хочете видалити "${h.name}" та всі її дані? Цю дію неможливо відмінити.`;
+  document.getElementById('modal-confirm-btn').onclick=()=>{ deleteHromada(id); closeModal(); };
+  document.getElementById('confirm-modal').classList.add('show');
+}
+
+function deleteHromada(id){
+  DB = DB.filter(x=>x.id!==id);
+  saveDB();
+  if(selectedId===id){
+    selectedId=null;
+    document.getElementById('stab-detail').style.display='none';
+  }
+  switchTab('list');
+  renderMarkers();
+  updateStats();
+  renderList();
+  toast('Громаду видалено');
+}
+
+function closeModal(){ document.getElementById('confirm-modal').classList.remove('show'); }
+
+// ─── TABS ────────────────────────────────────────────────────────────
+function switchTab(name){
+  ['list','add','detail'].forEach(n=>{
+    document.getElementById('stab-'+n) && document.getElementById('stab-'+n).classList.toggle('active',n===name);
+    document.getElementById('panel-'+n) && document.getElementById('panel-'+n).classList.toggle('active',n===name);
+  });
+}
+
+// ─── EXPORT ──────────────────────────────────────────────────────────
+function exportCSV(){
+  const rows=[['ID','Назва','Тип','Район','Голова','Email','Телефон','Побратими (к-сть)','Меморандуми (к-сть)','Міста-побратими','Організації']];
+  DB.forEach(h=>{
+    rows.push([h.id,h.name,h.type,h.district,h.head||'',h.email||'',h.phone||'',h.partners.length,h.memos.length,
+      h.partners.map(p=>p.city+' ('+p.country+')').join('; '),
+      h.memos.map(m=>m.org).join('; ')]);
+  });
+  const csv = '\uFEFF'+rows.map(r=>r.map(c=>'"'+(String(c)).replace(/"/g,'""')+'"').join(',')).join('\n');
+  download(new Blob([csv],{type:'text/csv;charset=utf-8'}), 'monitoring-hromad-'+today()+'.csv');
+  toast('CSV збережено');
+}
+
+function exportJSON(){
+  download(new Blob([JSON.stringify(DB,null,2)],{type:'application/json'}), 'monitoring-hromad-'+today()+'.json');
+  toast('JSON збережено');
+}
+
+function download(blob,name){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=name; a.click(); URL.revokeObjectURL(a.href);
+}
+
+function today(){ return new Date().toISOString().slice(0,10); }
+
+// ─── TOAST ───────────────────────────────────────────────────────────
+function toast(msg, type='success'){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast' + (type==='error'?' error':'') + ' show';
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  updateStats();
+  renderList();
+  setTimeout(initMap, 100);
+});
+</script>
+</body>
+</html>
