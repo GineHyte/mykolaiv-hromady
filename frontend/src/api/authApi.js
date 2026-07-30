@@ -13,7 +13,7 @@ async function request(path, options) {
 }
 
 export const authApi = {
-  login: (email, password) =>
-    request("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
+  login: (username, password) =>
+    request("/auth/login", { method: "POST", body: JSON.stringify({ email: username, password }) }),
   me: (token) => request("/auth/me", { headers: { Authorization: `Bearer ${token}` } }),
 };

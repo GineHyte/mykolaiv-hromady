@@ -25,8 +25,8 @@ export function AuthProvider({ children }) {
       .finally(() => setChecking(false));
   }, [token]);
 
-  const login = useCallback(async (email, password) => {
-    const { token, user } = await authApi.login(email, password);
+  const login = useCallback(async (username, password) => {
+    const { token, user } = await authApi.login(username, password);
     setToken(token);
     setTokenState(token);
     setUser(user);
