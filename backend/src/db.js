@@ -37,6 +37,19 @@ db.exec(`
   );
 `);
 
+function ensureColumn(table, column, definition) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all();
+  if (!cols.some((c) => c.name === column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
+}
+
+// Права власності: кожна громада належить користувачу, що її створив.
+ensureColumn("hromady", "created_by", "INTEGER REFERENCES users(id) ON DELETE SET NULL");
+// banned = заблокований вхід; token_version росте при kick/бані — миттєво знецінює видані JWT.
+ensureColumn("users", "banned", "INTEGER NOT NULL DEFAULT 0");
+ensureColumn("users", "token_version", "INTEGER NOT NULL DEFAULT 0");
+
 function seedAdminFromEnv() {
   const email = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
   const password = process.env.ADMIN_PASSWORD || "";
@@ -109,5 +122,6 @@ export function rowToHromada(row) {
     coords: row.lat != null && row.lng != null ? [row.lat, row.lng] : null,
     partners: JSON.parse(row.partners || "[]"),
     memos: JSON.parse(row.memos || "[]"),
+    ownerId: row.created_by ?? null,
   };
 }

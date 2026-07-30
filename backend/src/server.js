@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { hromadyRouter } from "./routes/hromady.routes.js";
 import { authRouter } from "./routes/auth.routes.js";
+import { usersRouter } from "./routes/users.routes.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -13,6 +14,7 @@ app.use(express.json());
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 app.use("/api/auth", authRouter);
+app.use("/api/admin", usersRouter);
 app.use("/api/hromady", hromadyRouter);
 
 app.use((err, req, res, next) => {

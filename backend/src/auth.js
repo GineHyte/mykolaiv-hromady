@@ -8,9 +8,11 @@ if (!JWT_SECRET) {
 }
 
 export function signToken(user) {
-  return jwt.sign({ sub: user.id, email: user.email, role: user.role }, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN,
-  });
+  return jwt.sign(
+    { sub: user.id, email: user.email, role: user.role, tokenVersion: user.token_version },
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRES_IN }
+  );
 }
 
 export function verifyToken(token) {

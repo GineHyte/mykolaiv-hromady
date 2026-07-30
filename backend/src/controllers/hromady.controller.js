@@ -14,6 +14,10 @@ export function getHromada(req, res) {
   res.json(rowToHromada(row));
 }
 
+function canModify(user, row) {
+  return user.role === "admin" || row.created_by === user.id;
+}
+
 export function createHromada(req, res) {
   const h = req.body;
   if (!h.name || !h.name.trim()) {
@@ -22,8 +26,8 @@ export function createHromada(req, res) {
 
   const coords = h.coords;
   const info = db.prepare(`
-    INSERT INTO hromady (name, type, district, head, email, phone, site, lat, lng, partners, memos)
-    VALUES (@name, @type, @district, @head, @email, @phone, @site, @lat, @lng, @partners, @memos)
+    INSERT INTO hromady (name, type, district, head, email, phone, site, lat, lng, partners, memos, created_by)
+    VALUES (@name, @type, @district, @head, @email, @phone, @site, @lat, @lng, @partners, @memos, @createdBy)
   `).run({
     name: h.name.trim(),
     type: h.type || "Міська",
@@ -36,6 +40,7 @@ export function createHromada(req, res) {
     lng: coords ? coords[1] : null,
     partners: JSON.stringify(h.partners || []),
     memos: JSON.stringify(h.memos || []),
+    createdBy: req.user.id,
   });
 
   const row = db.prepare(SELECT_ONE).get(info.lastInsertRowid);
@@ -45,6 +50,9 @@ export function createHromada(req, res) {
 export function updateHromada(req, res) {
   const existing = db.prepare(SELECT_ONE).get(req.params.id);
   if (!existing) return res.status(404).json({ error: "Громаду не знайдено" });
+  if (!canModify(req.user, existing)) {
+    return res.status(403).json({ error: "Ви можете редагувати лише власні громади" });
+  }
 
   const h = req.body;
   if (!h.name || !h.name.trim()) {
@@ -78,7 +86,12 @@ export function updateHromada(req, res) {
 }
 
 export function deleteHromada(req, res) {
-  const info = db.prepare("DELETE FROM hromady WHERE id = ?").run(req.params.id);
-  if (info.changes === 0) return res.status(404).json({ error: "Громаду не знайдено" });
+  const existing = db.prepare(SELECT_ONE).get(req.params.id);
+  if (!existing) return res.status(404).json({ error: "Громаду не знайдено" });
+  if (!canModify(req.user, existing)) {
+    return res.status(403).json({ error: "Ви можете видаляти лише власні громади" });
+  }
+
+  db.prepare("DELETE FROM hromady WHERE id = ?").run(req.params.id);
   res.status(204).end();
 }
