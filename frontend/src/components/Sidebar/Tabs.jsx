@@ -1,7 +1,9 @@
 import { useHromadyContext } from "../../context/HromadyContext.jsx";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 export default function Tabs() {
   const { activeTab, setActiveTab, editingId, selected } = useHromadyContext();
+  const { isAdmin } = useAuth();
 
   return (
     <div className="sidebar-tabs">
@@ -11,12 +13,14 @@ export default function Tabs() {
       >
         <i className="fa-solid fa-list-ul"></i> Список
       </button>
-      <button
-        className={`stab${activeTab === "add" ? " active" : ""}`}
-        onClick={() => setActiveTab("add")}
-      >
-        <i className="fa-solid fa-plus"></i> {editingId ? "Редагувати" : "Додати"}
-      </button>
+      {isAdmin && (
+        <button
+          className={`stab${activeTab === "add" ? " active" : ""}`}
+          onClick={() => setActiveTab("add")}
+        >
+          <i className="fa-solid fa-plus"></i> {editingId ? "Редагувати" : "Додати"}
+        </button>
+      )}
       {selected && (
         <button
           className={`stab${activeTab === "detail" ? " active" : ""}`}

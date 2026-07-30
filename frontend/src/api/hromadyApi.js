@@ -1,8 +1,14 @@
+import { getToken } from "../utils/authToken.js";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 
 async function request(path, options) {
+  const token = getToken();
   const res = await fetch(`${API_URL}${path}`, {
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     ...options,
   });
   if (!res.ok) {

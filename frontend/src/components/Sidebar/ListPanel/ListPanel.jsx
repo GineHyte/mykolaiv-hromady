@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useHromadyContext } from "../../../context/HromadyContext.jsx";
+import { useAuth } from "../../../context/AuthContext.jsx";
 import { exportCSV, exportJSON } from "../../../utils/export.js";
 import StatsGrid from "./StatsGrid.jsx";
 import FilterBar from "./FilterBar.jsx";
@@ -17,6 +18,7 @@ function matchesFilters(h, filters) {
 
 export default function ListPanel() {
   const { hromady, loading, error, filters, setFilters, selectedId, selectHromada, startAdd } = useHromadyContext();
+  const { isAdmin } = useAuth();
 
   const filtered = useMemo(
     () => hromady.filter((h) => matchesFilters(h, filters)),
@@ -56,7 +58,9 @@ export default function ListPanel() {
       <div className="export-row">
         <button className="btn btn-sm" onClick={() => exportCSV(hromady)}><i className="fa-solid fa-download"></i> CSV</button>
         <button className="btn btn-sm" onClick={() => exportJSON(hromady)}><i className="fa-solid fa-code"></i> JSON</button>
-        <button className="btn btn-sm btn-green" onClick={startAdd}><i className="fa-solid fa-plus"></i> Нова громада</button>
+        {isAdmin && (
+          <button className="btn btn-sm btn-green" onClick={startAdd}><i className="fa-solid fa-plus"></i> Нова громада</button>
+        )}
       </div>
     </div>
   );

@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useHromadyContext } from "../../../context/HromadyContext.jsx";
+import { useAuth } from "../../../context/AuthContext.jsx";
 import ConfirmModal from "../../ConfirmModal.jsx";
 
 export default function DetailPanel() {
   const { selected, startEdit, deleteHromada } = useHromadyContext();
+  const { isAdmin } = useAuth();
   const [confirmTarget, setConfirmTarget] = useState(null);
 
   if (!selected) return null;
@@ -17,14 +19,16 @@ export default function DetailPanel() {
             <div className="detail-name">{h.name}</div>
             <div className="detail-sub">{h.type} громада · {h.district} район</div>
           </div>
-          <div className="detail-actions">
-            <button className="btn btn-sm" title="Редагувати" onClick={() => startEdit(h.id)}>
-              <i className="fa-solid fa-pen"></i>
-            </button>
-            <button className="btn btn-sm btn-danger" title="Видалити" onClick={() => setConfirmTarget(h)}>
-              <i className="fa-solid fa-trash"></i>
-            </button>
-          </div>
+          {isAdmin && (
+            <div className="detail-actions">
+              <button className="btn btn-sm" title="Редагувати" onClick={() => startEdit(h.id)}>
+                <i className="fa-solid fa-pen"></i>
+              </button>
+              <button className="btn btn-sm btn-danger" title="Видалити" onClick={() => setConfirmTarget(h)}>
+                <i className="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="info-list">
@@ -94,11 +98,13 @@ export default function DetailPanel() {
           </div>
         )}
 
-        <div style={{ marginTop: 18, display: "flex", gap: 8 }}>
-          <button className="btn btn-green btn-block" onClick={() => startEdit(h.id)}>
-            <i className="fa-solid fa-pen-to-square"></i> Редагувати дані громади
-          </button>
-        </div>
+        {isAdmin && (
+          <div style={{ marginTop: 18, display: "flex", gap: 8 }}>
+            <button className="btn btn-green btn-block" onClick={() => startEdit(h.id)}>
+              <i className="fa-solid fa-pen-to-square"></i> Редагувати дані громади
+            </button>
+          </div>
+        )}
       </div>
 
       <ConfirmModal

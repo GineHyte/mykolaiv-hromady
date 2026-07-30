@@ -33,6 +33,9 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-size:
 .header-sub { font-size: 12px; opacity: .75; white-space: nowrap; }
 .header-badges { display: flex; gap: 8px; }
 .hbadge { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25); border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+.header-auth { display: flex; align-items: center; gap: 8px; }
+.header-auth-btn.btn-outline { color: #fff; border-color: rgba(255,255,255,.4); background: transparent; }
+.header-auth-btn.btn-outline:hover { background: rgba(255,255,255,.15); }
 
 /* LAYOUT */
 .app { display: flex; height: calc(100vh - 56px); overflow: hidden; }
