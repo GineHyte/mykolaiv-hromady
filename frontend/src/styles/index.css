@@ -169,6 +169,21 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-size:
 .modal { background: var(--surface); border-radius: 12px; padding: 24px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
 .modal h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
 .modal-actions { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+.modal-lg { max-width: 900px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.modal-header h2 { margin-bottom: 0; }
+
+/* ADMIN DASHBOARD */
+.admin-stats-grid { grid-template-columns: repeat(5, 1fr); margin-bottom: 16px; }
+.admin-table-wrap { overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius); flex: 1; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.admin-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); padding: 8px 12px; background: var(--surface-2); border-bottom: 1px solid var(--border); position: sticky; top: 0; }
+.admin-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+.admin-table tr:last-child td { border-bottom: none; }
+.admin-actions { display: flex; gap: 4px; }
+@media (max-width: 768px) {
+  .admin-stats-grid { grid-template-columns: 1fr 1fr; }
+}
 
 /* RESPONSIVE */
 @media (max-width: 768px) {

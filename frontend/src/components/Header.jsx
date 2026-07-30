@@ -2,11 +2,13 @@ import { useState } from "react";
 import { useHromadyContext } from "../context/HromadyContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import LoginModal from "./Auth/LoginModal.jsx";
+import AdminDashboard from "./Admin/AdminDashboard.jsx";
 
 export default function Header() {
   const { hromady } = useHromadyContext();
-  const { user, isAdmin, logout } = useAuth();
+  const { user, isAdmin, isSuperAdmin, logout } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
+  const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const linked = hromady.filter((h) => h.partners.length > 0 || h.memos.length > 0).length;
   const updated = new Date().toLocaleDateString("uk-UA");
 
@@ -24,6 +26,11 @@ export default function Header() {
           <span className="hbadge" title={user.email}>
             <i className="fa-solid fa-user-shield"></i> {user.email}
           </span>
+          {isSuperAdmin && (
+            <button className="btn btn-sm btn-outline header-auth-btn" onClick={() => setShowAdminDashboard(true)}>
+              <i className="fa-solid fa-gauge"></i> Адмін
+            </button>
+          )}
           <button className="btn btn-sm btn-outline header-auth-btn" onClick={logout}>
             <i className="fa-solid fa-right-from-bracket"></i> Вийти
           </button>
@@ -34,6 +41,7 @@ export default function Header() {
         </button>
       )}
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
+      {showAdminDashboard && <AdminDashboard onClose={() => setShowAdminDashboard(false)} />}
     </header>
   );
 }
