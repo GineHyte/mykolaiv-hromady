@@ -38,7 +38,14 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
-  const value = { user, isAdmin: !!user, checking, login, logout };
+  const value = {
+    user,
+    isAdmin: !!user,
+    isSuperAdmin: user?.role === "admin",
+    checking,
+    login,
+    logout,
+  };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
