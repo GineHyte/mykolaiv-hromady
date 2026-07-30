@@ -3,7 +3,7 @@ import { useAuth } from "../../context/AuthContext.jsx";
 
 export default function LoginModal({ onClose }) {
   const { login } = useAuth();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -13,7 +13,7 @@ export default function LoginModal({ onClose }) {
     setError("");
     setBusy(true);
     try {
-      await login(email, password);
+      await login(username, password);
       onClose();
     } catch (err) {
       setError(err.message);
@@ -25,16 +25,16 @@ export default function LoginModal({ onClose }) {
   return (
     <div className="modal-bg show">
       <div className="modal">
-        <h2>Вхід для адміністратора</h2>
+        <h2>Вхід</h2>
         <form onSubmit={handleSubmit}>
           <div className="fgroup">
-            <label>Email</label>
+            <label>Псевдонім</label>
             <input
-              type="email"
+              type="text"
               autoFocus
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
             />
           </div>
           <div className="fgroup">
