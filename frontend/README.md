@@ -41,7 +41,9 @@ src/
 
 ## GitHub Pages Deployment
 
-GitHub Pages liefert nur statische Dateien — kein Node-Prozess. Für dieses Projekt heißt das:
-1. `npm run build` erzeugt `dist/`.
-2. `dist/` (nicht `src/`) wird deployt — z.B. per GitHub Action, die bei Push auf `main` baut und nach `gh-pages` published, oder manuell in den `gh-pages`-Branch kopiert.
-3. `VITE_API_URL` muss beim Build auf die öffentliche URL des Backends zeigen (dein eigener Server), sonst laufen Requests gegen `localhost`.
+GitHub Pages liefert nur statische Dateien — kein Node-Prozess. Deployment läuft automatisch über `.github/workflows/deploy-pages.yml`:
+1. Push auf `main` (mit Änderungen unter `frontend/`) baut `dist/` per `npm run build`.
+2. `dist/` wird als Pages-Artifact hochgeladen und deployt.
+3. `VITE_API_URL` kommt aus dem Repo-Variable `VITE_API_URL` (Settings → Secrets and variables → Actions → Variables), Fallback ist `https://hromady.petrenko.site/api`.
+
+Einmalig einrichten: Repo-Settings → Pages → Source auf **GitHub Actions** stellen.
