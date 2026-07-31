@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
+import { useModalDismiss, onBackdropMouseDown } from "../../hooks/useModalDismiss.js";
 
 export default function LoginModal({ onClose, onSwitchToRegister }) {
   const { login } = useAuth();
@@ -7,6 +8,8 @@ export default function LoginModal({ onClose, onSwitchToRegister }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  useModalDismiss(onClose, !busy);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,31 +26,42 @@ export default function LoginModal({ onClose, onSwitchToRegister }) {
   };
 
   return (
-    <div className="modal-bg show">
-      <div className="modal">
-        <h2>Вхід</h2>
+    <div className="modal-bg show" onMouseDown={busy ? undefined : onBackdropMouseDown(onClose)}>
+      <div className="modal" role="dialog" aria-modal="true" aria-labelledby="login-modal-title">
+        <div className="modal-header">
+          <h2 id="login-modal-title">Вхід</h2>
+          <button type="button" className="btn btn-sm modal-close" onClick={onClose} disabled={busy} aria-label="Закрити">
+            <i className="fa-solid fa-xmark"></i>
+          </button>
+        </div>
         <form onSubmit={handleSubmit}>
           <div className="fgroup">
-            <label>Псевдонім</label>
+            <label htmlFor="login-username">Псевдонім</label>
             <input
+              id="login-username"
               type="text"
               autoFocus
               required
+              autoComplete="username"
+              disabled={busy}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
           </div>
           <div className="fgroup">
-            <label>Пароль</label>
+            <label htmlFor="login-password">Пароль</label>
             <input
+              id="login-password"
               type="password"
               required
+              autoComplete="current-password"
+              disabled={busy}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
           {error && (
-            <p style={{ color: "var(--red)", fontSize: 13, marginTop: 4 }}>{error}</p>
+            <p role="alert" style={{ color: "var(--red)", fontSize: 13, marginTop: 4 }}>{error}</p>
           )}
           <div className="modal-actions">
             <button type="button" className="btn" onClick={onClose} disabled={busy}>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { adminApi } from "../../api/adminApi.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useHromadyContext } from "../../context/HromadyContext.jsx";
+import { useModalDismiss, onBackdropMouseDown } from "../../hooks/useModalDismiss.js";
 
 export default function AdminDashboard({ onClose }) {
   const { user } = useAuth();
@@ -12,6 +13,8 @@ export default function AdminDashboard({ onClose }) {
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
+
+  useModalDismiss(() => (confirmAction ? setConfirmAction(null) : onClose()), busyId === null);
 
   const load = async () => {
     setLoading(true);
@@ -78,11 +81,11 @@ export default function AdminDashboard({ onClose }) {
   };
 
   return (
-    <div className="modal-bg show">
-      <div className="modal modal-lg">
+    <div className="modal-bg show" onMouseDown={onBackdropMouseDown(onClose)}>
+      <div className="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
         <div className="modal-header">
-          <h2>Панель адміністратора</h2>
-          <button className="btn btn-sm" onClick={onClose}>
+          <h2 id="admin-modal-title">Панель адміністратора</h2>
+          <button className="btn btn-sm modal-close" onClick={onClose} aria-label="Закрити">
             <i className="fa-solid fa-xmark"></i>
           </button>
         </div>
@@ -138,6 +141,7 @@ export default function AdminDashboard({ onClose }) {
                               disabled={rowBusy}
                               onClick={() => handleRoleToggle(u)}
                               title={u.role === "admin" ? "Зняти права адміна" : "Зробити адміном"}
+                              aria-label={u.role === "admin" ? "Зняти права адміна" : "Зробити адміном"}
                             >
                               <i className="fa-solid fa-user-shield"></i>
                             </button>
@@ -146,6 +150,7 @@ export default function AdminDashboard({ onClose }) {
                               disabled={rowBusy || isSelf}
                               onClick={() => handleKick(u)}
                               title="Розлогінити (скинути сесії)"
+                              aria-label="Розлогінити (скинути сесії)"
                             >
                               <i className="fa-solid fa-right-from-bracket"></i>
                             </button>
@@ -154,6 +159,7 @@ export default function AdminDashboard({ onClose }) {
                               disabled={rowBusy || isSelf}
                               onClick={() => handleBanToggle(u)}
                               title={u.banned ? "Розблокувати" : "Заблокувати"}
+                              aria-label={u.banned ? "Розблокувати" : "Заблокувати"}
                             >
                               <i className={`fa-solid ${u.banned ? "fa-lock-open" : "fa-lock"}`}></i>
                             </button>
@@ -162,6 +168,7 @@ export default function AdminDashboard({ onClose }) {
                               disabled={rowBusy || isSelf}
                               onClick={() => handleDelete(u)}
                               title="Видалити користувача"
+                              aria-label="Видалити користувача"
                             >
                               <i className="fa-solid fa-trash"></i>
                             </button>
@@ -182,9 +189,9 @@ export default function AdminDashboard({ onClose }) {
       </div>
 
       {confirmAction && (
-        <div className="modal-bg show">
-          <div className="modal">
-            <h2>{confirmAction.type === "delete" ? "Видалити користувача" : "Заблокувати користувача"}</h2>
+        <div className="modal-bg show" onMouseDown={busyId !== null ? undefined : onBackdropMouseDown(() => setConfirmAction(null))}>
+          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="admin-confirm-title">
+            <h2 id="admin-confirm-title">{confirmAction.type === "delete" ? "Видалити користувача" : "Заблокувати користувача"}</h2>
             <p style={{ color: "var(--text-2)", fontSize: 13, lineHeight: 1.5 }}>
               {confirmAction.type === "delete"
                 ? `Ви впевнені, що хочете видалити "${confirmAction.target.email}"? Цю дію неможливо відмінити.`
