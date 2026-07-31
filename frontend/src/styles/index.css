@@ -153,6 +153,10 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-size:
 .map-filter-pill { background: rgba(255,255,255,.95); border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-2); transition: all .15s; white-space: nowrap; box-shadow: var(--shadow); }
 .map-filter-pill.active { background: var(--blue); color: #fff; border-color: var(--blue); }
 
+/* MAP PICK HINT */
+.map-pick-hint { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 1000; background: var(--blue); color: #fff; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; box-shadow: var(--shadow-md); display: flex; align-items: center; }
+.map-pick-hint .btn { background: rgba(255,255,255,.2); color: #fff; border: 1px solid rgba(255,255,255,.4); }
+
 /* TOAST */
 .toast-wrap { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 9999; pointer-events: none; }
 .toast { background: var(--green); color: #fff; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; box-shadow: var(--shadow-md); opacity: 0; transition: opacity .3s; white-space: nowrap; }

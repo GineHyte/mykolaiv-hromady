@@ -13,6 +13,8 @@ export function HromadyProvider({ children }) {
   const [editingId, setEditingId] = useState(null);
   const [mapFilter, setMapFilter] = useState("all");
   const [filters, setFilters] = useState({ search: "", district: "", status: "" });
+  const [pickCoordsMode, setPickCoordsMode] = useState(false);
+  const [pickedCoords, setPickedCoords] = useState(null);
 
   const selectHromada = (id) => {
     setSelectedId(id);
@@ -80,6 +82,10 @@ export function HromadyProvider({ children }) {
     setMapFilter,
     filters,
     setFilters,
+    pickCoordsMode,
+    setPickCoordsMode,
+    pickedCoords,
+    setPickedCoords,
     selectHromada,
     startAdd,
     startEdit,

@@ -13,11 +13,20 @@ let keyCounter = 0;
 const withKey = (item) => ({ ...item, key: `k${++keyCounter}` });
 
 export default function FormPanel() {
-  const { editingId, editing, saveHromada, showToast } = useHromadyContext();
+  const {
+    editingId, editing, saveHromada, showToast,
+    pickCoordsMode, setPickCoordsMode, pickedCoords, setPickedCoords,
+  } = useHromadyContext();
   const [fields, setFields] = useState(BLANK_FIELDS);
   const [partners, setPartners] = useState([]);
   const [memos, setMemos] = useState([]);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!pickedCoords) return;
+    setFields((f) => ({ ...f, coordsText: `${pickedCoords[0].toFixed(6)}, ${pickedCoords[1].toFixed(6)}` }));
+    setPickedCoords(null);
+  }, [pickedCoords, setPickedCoords]);
 
   useEffect(() => {
     if (editingId && editing) {
@@ -117,7 +126,23 @@ export default function FormPanel() {
         </div>
         <div className="fgroup">
           <label>Координати на карті (lat, lng)</label>
-          <input placeholder="47.1234, 31.9876" title="Широта і довгота через кому" value={fields.coordsText} onChange={(e) => setField("coordsText", e.target.value)} />
+          <div style={{ display: "flex", gap: 6 }}>
+            <input
+              style={{ flex: 1 }}
+              placeholder="47.1234, 31.9876"
+              title="Широта і довгота через кому"
+              value={fields.coordsText}
+              onChange={(e) => setField("coordsText", e.target.value)}
+            />
+            <button
+              type="button"
+              className={`btn btn-sm${pickCoordsMode ? " btn-primary" : ""}`}
+              title="Поставити точку на карті"
+              onClick={() => setPickCoordsMode(!pickCoordsMode)}
+            >
+              <i className="fa-solid fa-location-dot"></i> {pickCoordsMode ? "Обираю…" : "На карті"}
+            </button>
+          </div>
         </div>
 
         <div className="form-section-title">

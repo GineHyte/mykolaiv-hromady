@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import { useHromadyContext } from "../context/HromadyContext.jsx";
 import { resolveCoords } from "../utils/coords.js";
@@ -38,6 +38,16 @@ function FlyToSelected({ selected }) {
   return null;
 }
 
+function CoordsPicker({ active, onPick }) {
+  useMapEvents({
+    click(e) {
+      if (!active) return;
+      onPick([e.latlng.lat, e.latlng.lng]);
+    },
+  });
+  return null;
+}
+
 function matchesFilter(h, mapFilter) {
   if (mapFilter === "partner") return h.partners.length > 0;
   if (mapFilter === "memo") return h.memos.length > 0 && h.partners.length === 0;
@@ -46,7 +56,10 @@ function matchesFilter(h, mapFilter) {
 }
 
 export default function MapView() {
-  const { hromady, mapFilter, setMapFilter, selectedId, selected, selectHromada } = useHromadyContext();
+  const {
+    hromady, mapFilter, setMapFilter, selectedId, selected, selectHromada,
+    pickCoordsMode, setPickCoordsMode, setPickedCoords,
+  } = useHromadyContext();
 
   const visible = useMemo(
     () => hromady.filter((h) => matchesFilter(h, mapFilter)),
@@ -55,13 +68,26 @@ export default function MapView() {
 
   return (
     <div className="map-area">
-      <MapContainer id="map" center={[47.2, 31.9]} zoom={8} zoomControl>
+      <MapContainer
+        id="map"
+        center={[47.2, 31.9]}
+        zoom={8}
+        zoomControl
+        style={pickCoordsMode ? { cursor: "crosshair" } : undefined}
+      >
         <TileLayer
           attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           maxZoom={19}
         />
         <FlyToSelected selected={selected} />
+        <CoordsPicker
+          active={pickCoordsMode}
+          onPick={(coords) => {
+            setPickedCoords(coords);
+            setPickCoordsMode(false);
+          }}
+        />
         {visible.map((h) => (
           <Marker
             key={h.id}
@@ -106,6 +132,16 @@ export default function MapView() {
         <div className="leg-item"><div className="leg-dot" style={{ background: "#1a56a0" }}></div>Лише меморандуми</div>
         <div className="leg-item"><div className="leg-dot" style={{ background: "#94a3b8" }}></div>Немає зв'язків</div>
       </div>
+
+      {pickCoordsMode && (
+        <div className="map-pick-hint">
+          <i className="fa-solid fa-map-pin" style={{ marginRight: 6 }}></i>
+          Клікніть на карті, щоб поставити точку
+          <button className="btn btn-sm" onClick={() => setPickCoordsMode(false)} style={{ marginLeft: 10 }}>
+            Скасувати
+          </button>
+        </div>
+      )}
     </div>
   );
 }
