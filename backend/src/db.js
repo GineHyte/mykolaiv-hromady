@@ -51,15 +51,15 @@ ensureColumn("users", "banned", "INTEGER NOT NULL DEFAULT 0");
 ensureColumn("users", "token_version", "INTEGER NOT NULL DEFAULT 0");
 
 function seedAdminFromEnv() {
-  const email = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
+  const username = (process.env.ADMIN_USERNAME || "").trim().toLowerCase();
   const password = process.env.ADMIN_PASSWORD || "";
 
   if (!password) {
     console.warn("ADMIN_PASSWORD не задано в .env — адмін-акаунт не створено/не оновлено.");
     return;
   }
-  if (!email) {
-    console.warn("ADMIN_EMAIL не задано в .env — адмін-акаунт не створено/не оновлено.");
+  if (!username) {
+    console.warn("ADMIN_USERNAME не задано в .env — адмін-акаунт не створено/не оновлено.");
     return;
   }
 
@@ -68,7 +68,7 @@ function seedAdminFromEnv() {
     INSERT INTO users (email, password_hash, role)
     VALUES (@email, @passwordHash, 'admin')
     ON CONFLICT(email) DO UPDATE SET password_hash = excluded.password_hash
-  `).run({ email, passwordHash });
+  `).run({ email: username, passwordHash });
 }
 
 seedAdminFromEnv();

@@ -14,9 +14,9 @@ Server läuft auf `http://localhost:4000`. SQLite-DB liegt in `data/hromady.sqli
 
 ## Accounts & Rechte
 
-Der initiale Admin-Account wird bei **jedem Serverstart** aus den `.env`-Variablen `ADMIN_EMAIL` und `ADMIN_PASSWORD` angelegt bzw. aktualisiert (Passwort-Hash wird per `bcryptjs` neu berechnet, falls sich das Passwort geändert hat). Weitere Nutzer registrieren sich selbst über `/api/auth/register` (Rolle immer `user`); Adminrechte vergibt ein bestehender Admin über das Dashboard (`PATCH /api/admin/users/:id/role`).
+Der initiale Admin-Account wird bei **jedem Serverstart** aus den `.env`-Variablen `ADMIN_USERNAME` und `ADMIN_PASSWORD` angelegt bzw. aktualisiert (Passwort-Hash wird per `bcryptjs` neu berechnet, falls sich das Passwort geändert hat). Weitere Nutzer registrieren sich selbst über `/api/auth/register` (Rolle immer `user`); Adminrechte vergibt ein bestehender Admin über das Dashboard (`PATCH /api/admin/users/:id/role`).
 
-- `ADMIN_EMAIL` / `ADMIN_PASSWORD` fehlen → Seeding wird übersprungen (Warnung im Log), bestehender Account bleibt unverändert.
+- `ADMIN_USERNAME` / `ADMIN_PASSWORD` fehlen → Seeding wird übersprungen (Warnung im Log), bestehender Account bleibt unverändert.
 - `JWT_SECRET` ist Pflicht — ohne diese Variable startet der Server nicht (`throw` beim Import von `src/auth.js`). Für Produktion einen langen zufälligen Wert setzen, z. B. `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`.
 - `JWT_EXPIRES_IN` (Default `12h`) steuert die Gültigkeit des Tokens.
 - Jeder Request mit Token wird gegen die DB geprüft (nicht nur gegen den Token-Inhalt) — Bann, Kick und Rollenänderung wirken dadurch sofort, auch bei bereits ausgestellten Tokens.
@@ -27,8 +27,8 @@ Login:
 ```bash
 curl -X POST http://localhost:4000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@example.com","password":"..."}'
-# => { "token": "...", "user": { "id": 1, "email": "...", "role": "admin" } }
+  -d '{"email":"admin","password":"..."}'
+# => { "token": "...", "user": { "id": 1, "email": "admin", "role": "admin" } }
 ```
 
 Den erhaltenen Token als `Authorization: Bearer <token>` bei geschützten Requests mitschicken.
@@ -58,6 +58,6 @@ Den erhaltenen Token als `Authorization: Bearer <token>` bei geschützten Reques
 
 ## Deployment auf eigenem Server
 
-- `.env` mit echter `CORS_ORIGIN` (die GitHub-Pages-URL des Frontends), `ADMIN_EMAIL`, `ADMIN_PASSWORD` und einem zufälligen `JWT_SECRET` setzen.
+- `.env` mit echter `CORS_ORIGIN` (die GitHub-Pages-URL des Frontends), `ADMIN_USERNAME`, `ADMIN_PASSWORD` und einem zufälligen `JWT_SECRET` setzen.
 - Prozess mit `pm2` oder systemd laufen lassen, dahinter nginx als Reverse-Proxy mit HTTPS (Let's Encrypt) — Browser blockt sonst Mixed-Content, da GitHub Pages HTTPS erzwingt.
 - `data/hromady.sqlite` regelmäßig sichern (Backup), liegt nur auf diesem Server, nicht im Repo.
