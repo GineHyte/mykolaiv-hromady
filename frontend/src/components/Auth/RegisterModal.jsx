@@ -34,7 +34,7 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
 
   return (
     <div className="modal-bg show" onMouseDown={busy ? undefined : onBackdropMouseDown(onClose)}>
-      <div className="modal" role="dialog" aria-modal="true" aria-labelledby="register-modal-title">
+      <div className="modal modal-auth" role="dialog" aria-modal="true" aria-labelledby="register-modal-title">
         <div className="modal-header">
           <h2 id="register-modal-title">Реєстрація</h2>
           <button type="button" className="btn btn-sm modal-close" onClick={onClose} disabled={busy} aria-label="Закрити">
@@ -90,6 +90,14 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
           {error && (
             <p role="alert" style={{ color: "var(--red)", fontSize: 13, marginTop: 4 }}>{error}</p>
           )}
+          {onSwitchToLogin && (
+            <p className="auth-switch">
+              Вже є акаунт?{" "}
+              <button type="button" className="btn-link" onClick={onSwitchToLogin} disabled={busy}>
+                Увійти
+              </button>
+            </p>
+          )}
           <div className="modal-actions">
             <button type="button" className="btn" onClick={onClose} disabled={busy}>
               Скасувати
@@ -98,14 +106,6 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
               {busy ? <span className="spinner"></span> : "Зареєструватися"}
             </button>
           </div>
-          {onSwitchToLogin && (
-            <p style={{ marginTop: 12, fontSize: 13 }}>
-              Вже є акаунт?{" "}
-              <button type="button" className="btn-link" onClick={onSwitchToLogin} disabled={busy}>
-                Увійти
-              </button>
-            </p>
-          )}
         </form>
       </div>
     </div>
