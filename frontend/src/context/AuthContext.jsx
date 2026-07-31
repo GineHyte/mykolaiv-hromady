@@ -32,6 +32,13 @@ export function AuthProvider({ children }) {
     setUser(user);
   }, []);
 
+  const register = useCallback(async (email, password) => {
+    const { token, user } = await authApi.register(email, password);
+    setToken(token);
+    setTokenState(token);
+    setUser(user);
+  }, []);
+
   const logout = useCallback(() => {
     clearToken();
     setTokenState(null);
@@ -44,6 +51,7 @@ export function AuthProvider({ children }) {
     isSuperAdmin: user?.role === "admin",
     checking,
     login,
+    register,
     logout,
   };
 

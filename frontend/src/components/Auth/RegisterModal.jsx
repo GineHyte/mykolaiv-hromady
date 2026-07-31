@@ -1,19 +1,24 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
 
-export default function LoginModal({ onClose, onSwitchToRegister }) {
-  const { login } = useAuth();
-  const [username, setUsername] = useState("");
+export default function RegisterModal({ onClose, onSwitchToLogin }) {
+  const { register } = useAuth();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    if (password !== confirmPassword) {
+      setError("Паролі не співпадають");
+      return;
+    }
     setBusy(true);
     try {
-      await login(username, password);
+      await register(email, password);
       onClose();
     } catch (err) {
       setError(err.message);
@@ -25,16 +30,16 @@ export default function LoginModal({ onClose, onSwitchToRegister }) {
   return (
     <div className="modal-bg show">
       <div className="modal">
-        <h2>Вхід</h2>
+        <h2>Реєстрація</h2>
         <form onSubmit={handleSubmit}>
           <div className="fgroup">
-            <label>Псевдонім</label>
+            <label>Email</label>
             <input
-              type="text"
+              type="email"
               autoFocus
               required
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
           <div className="fgroup">
@@ -42,8 +47,19 @@ export default function LoginModal({ onClose, onSwitchToRegister }) {
             <input
               type="password"
               required
+              minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <div className="fgroup">
+            <label>Підтвердження пароля</label>
+            <input
+              type="password"
+              required
+              minLength={6}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
             />
           </div>
           {error && (
@@ -54,14 +70,14 @@ export default function LoginModal({ onClose, onSwitchToRegister }) {
               Скасувати
             </button>
             <button type="submit" className="btn btn-primary" disabled={busy}>
-              {busy ? <span className="spinner"></span> : "Увійти"}
+              {busy ? <span className="spinner"></span> : "Зареєструватися"}
             </button>
           </div>
-          {onSwitchToRegister && (
+          {onSwitchToLogin && (
             <p style={{ marginTop: 12, fontSize: 13 }}>
-              Немає акаунта?{" "}
-              <button type="button" className="btn-link" onClick={onSwitchToRegister} disabled={busy}>
-                Зареєструватися
+              Вже є акаунт?{" "}
+              <button type="button" className="btn-link" onClick={onSwitchToLogin} disabled={busy}>
+                Увійти
               </button>
             </p>
           )}

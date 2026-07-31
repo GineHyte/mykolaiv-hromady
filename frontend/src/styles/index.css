@@ -116,6 +116,8 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-size:
 .btn-block { width: 100%; justify-content: center; }
 .btn-row { display: flex; gap: 8px; margin-top: 16px; }
 .btn:disabled { opacity: .6; cursor: not-allowed; }
+.btn-link { background: none; border: none; padding: 0; color: var(--blue); font-weight: 600; font-size: inherit; cursor: pointer; font-family: inherit; text-decoration: underline; }
+.btn-link:disabled { opacity: .6; cursor: not-allowed; }
 
 /* DETAIL PANEL */
 .detail-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }

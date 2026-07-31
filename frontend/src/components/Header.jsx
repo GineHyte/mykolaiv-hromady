@@ -2,12 +2,13 @@ import { useState } from "react";
 import { useHromadyContext } from "../context/HromadyContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import LoginModal from "./Auth/LoginModal.jsx";
+import RegisterModal from "./Auth/RegisterModal.jsx";
 import AdminDashboard from "./Admin/AdminDashboard.jsx";
 
 export default function Header() {
   const { hromady } = useHromadyContext();
   const { user, isAdmin, isSuperAdmin, logout } = useAuth();
-  const [showLogin, setShowLogin] = useState(false);
+  const [authMode, setAuthMode] = useState(null);
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const linked = hromady.filter((h) => h.partners.length > 0 || h.memos.length > 0).length;
   const updated = new Date().toLocaleDateString("uk-UA");
@@ -36,11 +37,16 @@ export default function Header() {
           </button>
         </div>
       ) : (
-        <button className="btn btn-sm btn-outline header-auth-btn" onClick={() => setShowLogin(true)}>
+        <button className="btn btn-sm btn-outline header-auth-btn" onClick={() => setAuthMode("login")}>
           <i className="fa-solid fa-right-to-bracket"></i> Вхід
         </button>
       )}
-      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
+      {authMode === "login" && (
+        <LoginModal onClose={() => setAuthMode(null)} onSwitchToRegister={() => setAuthMode("register")} />
+      )}
+      {authMode === "register" && (
+        <RegisterModal onClose={() => setAuthMode(null)} onSwitchToLogin={() => setAuthMode("login")} />
+      )}
       {showAdminDashboard && <AdminDashboard onClose={() => setShowAdminDashboard(false)} />}
     </header>
   );

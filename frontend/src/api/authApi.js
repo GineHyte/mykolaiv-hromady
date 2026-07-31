@@ -15,5 +15,7 @@ async function request(path, options) {
 export const authApi = {
   login: (username, password) =>
     request("/auth/login", { method: "POST", body: JSON.stringify({ email: username, password }) }),
+  register: (email, password) =>
+    request("/auth/register", { method: "POST", body: JSON.stringify({ email, password }) }),
   me: (token) => request("/auth/me", { headers: { Authorization: `Bearer ${token}` } }),
 };
