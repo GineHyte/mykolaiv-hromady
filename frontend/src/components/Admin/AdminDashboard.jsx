@@ -106,7 +106,7 @@ export default function AdminDashboard({ onClose }) {
               <table className="admin-table">
                 <thead>
                   <tr>
-                    <th>Email</th>
+                    <th>Псевдонім</th>
                     <th>Роль</th>
                     <th>Громад</th>
                     <th>Статус</th>

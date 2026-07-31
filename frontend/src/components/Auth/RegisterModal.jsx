@@ -3,7 +3,7 @@ import { useAuth } from "../../context/AuthContext.jsx";
 
 export default function RegisterModal({ onClose, onSwitchToLogin }) {
   const { register } = useAuth();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -18,7 +18,7 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
     }
     setBusy(true);
     try {
-      await register(email, password);
+      await register(username, password);
       onClose();
     } catch (err) {
       setError(err.message);
@@ -33,13 +33,13 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
         <h2>Реєстрація</h2>
         <form onSubmit={handleSubmit}>
           <div className="fgroup">
-            <label>Email</label>
+            <label>Псевдонім</label>
             <input
-              type="email"
+              type="text"
               autoFocus
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
             />
           </div>
           <div className="fgroup">
